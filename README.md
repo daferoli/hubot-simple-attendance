@@ -1,1 +1,1 @@
-# hubot-attendance
+# hubot-simple-attendance
