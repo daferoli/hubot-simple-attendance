@@ -1,0 +1,14 @@
+{
+  "name": "hubot-attendance",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository": "https://github.com/gjbianco/hubot-attendance",
+  "scripts": {},
+  "author": "Guy Bianco IV <gjbiancoiv@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "date-fns": "^1.29.0",
+    "lodash": "^4.17.10"
+  }
+}
