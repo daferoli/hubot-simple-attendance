@@ -1,9 +1,9 @@
 {
-  "name": "hubot-attendance",
+  "name": "hubot-simple-attendance",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "repository": "https://github.com/gjbianco/hubot-attendance",
+  "repository": "https://github.com/gjbianco/hubot-simple-attendance",
   "scripts": {},
   "author": "Guy Bianco IV <gjbiancoiv@gmail.com>",
   "license": "MIT",

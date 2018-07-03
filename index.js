@@ -2,5 +2,5 @@ const path = require('path')
 
 module.exports = (robot) => {
   const scriptsPath = path.resolve(__dirname, 'src')
-  robot.loadFile(scriptsPath, 'hubot-attendance.js')
+  robot.loadFile(scriptsPath, 'hubot-simple-attendance.js')
 }
