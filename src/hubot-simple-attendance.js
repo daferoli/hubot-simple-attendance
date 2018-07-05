@@ -62,12 +62,16 @@ module.exports = (robot) => {
     const listName = res.match[1]
 
     let bits = res.match[2]
-    let list = attendance[listName] || {}
-
     if(bits.length === 5) {
       bits = _.pad(bits, 7, '0')
     }
-    list[user] = bits
+
+    let list = attendance[listName] || {
+      users: {},
+      lock: null
+    }
+
+    list.users[user] = bits
     
     attendance[listName] = list
     res.send(`set ${user} to ${bits} in ${listName}`)
@@ -76,72 +80,118 @@ module.exports = (robot) => {
 
   robot.hear(/^!attendance (\w+) ?(sunday|monday|tuesday|wednesday|thursday|friday|saturday|today|tomorrow)?$/i, (res) => {
     const listName = res.match[1]
-    const day = res.match[2]
     const list = attendance[listName]
+    const day = res.match[2]
 
-    if (!list) {
-      res.send('list does not exist')
-      return
-    }
-
-    let out = `${listName} attendance:\n`
-    if (day) {
-      out += formatDay(list, day)
+    if(list) {
+      let out = `${listName} attendance:\n`
+      if (day) {
+        out += formatDay(list.users, day)
+      } else {
+        out +=
+          _.chain(DAY_MASKS)
+          .keys()
+          .map(day => (formatDay(list.users, day)))
+          .compact()
+          .join('\n')
+          .value()
+      }
+      res.send(out)
     } else {
-      _.each(_.keys(DAY_MASKS), day => out += `${formatDay(list, day)}\n`)
+      res.send('list does not exist')
     }
-    res.send(out)
+
   })
 
   robot.hear(/^!attendance cycle (\w+)$/i, (res) => {
-    // TODO check lock
+    const user = res.message.user.name
+    const list = attendance[res.match[1]]
+    if(list) {
+      if(!list.lock || list.lock === user) {
+        list.users = {}
+      } else {
+        res.send('you do not have permission to modify this list')
+      }
+    } else {
+      res.send('list does not exist')
+    }
     flush()
   })
 
-  // TODO
+  // TODO use decorator for lock checking?
   robot.hear(/^!attendance lock (\w+)$/i, (res) => {
+    const user = res.message.user.name
+    const list = attendance[res.match[1]]
+    if(list) {
+      if(!list.lock || list.lock === user) {
+        list.lock = user
+      } else {
+        res.send('you do not have permission to modify this list')
+      }
+    } else {
+      res.send('list does not exist')
+    }
     flush()
   })
 
-  // TODO
   robot.hear(/^!attendance unlock (\w+)$/i, (res) => {
+    const user = res.message.user.name
+    const list = attendance[res.match[1]]
+    if(list) {
+      if(!list.lock || list.lock === user) {
+        list.lock = null
+      } else {
+        res.send('you do not have permission to modify this list')
+      }
+    } else {
+      res.send('list does not exist')
+    }
     flush()
   })
 
   robot.hear(/^!attendance rm (\w+)$/i, (res) => {
-    // TODO check lock
-    delete attendance[res.match[1]]
+    const user = res.message.user.name
+    const list = attendance[res.match[1]]
+    if(list) {
+      if(!list.lock || list.lock === user) {
+        delete attendance[res.match[1]]
+      } else {
+        res.send('you do not have permission to modify this list')
+      }
+    } else {
+      res.send('list does not exist')
+    }
     flush()
   })
 
-  function formatDay(list, dayName) {
-    const users = getUsersForDay(list, dayName)
-    if(users.length) {
+  function formatDay(users, dayName) {
+    const dayUsers = getUsersForDay(users, dayName)
+    if(dayUsers.length) {
       let out = `${_.capitalize(dayName)}:\n`
-      _.each(getUsersForDay(list, dayName), user => out += `  ${user}\n`)
+      _.each(dayUsers, user => out += `  ${user}\n`)
       return out
-    } else {
-      return ''
     }
   }
 
-  function getDayMask(dayName) {
-    if(dayName === 'today') {
-      dayName = format(new Date(), 'dddd')
-      (new Date()).getDay()
-    } else if(dayName === 'tomorrow') {
-      dayName = format(addDays(new Date(), 1), 'dddd')
-    }
-    return DAY_MASKS[dayName]
-  }
-
-  function getUsersForDay(list, dayName) {
-    return _.chain(list)
+  function getUsersForDay(users, dayName) {
+    return _.chain(users)
             .toPairs()
             .filter(user => ((parseInt(user[1], 2) & getDayMask(dayName)) > 0))
             .sortBy('0')
             .map(user => (user[0]))
             .value()
+  }
+
+  function getDayMask(dayName) {
+    if(dayName === 'today') {
+      // FIXME
+      dayName = format(new Date(), 'dddd')
+      (new Date()).getDay()
+    } else if(dayName === 'tomorrow') {
+      // FIXME
+      dayName = format(addDays(new Date(), 1), 'dddd')
+    }
+    return DAY_MASKS[_.lowerCase(dayName)]
   }
 
   function flush() {
