@@ -1,6 +1,6 @@
 {
   "name": "hubot-simple-attendance",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "repository": "https://github.com/gjbianco/hubot-simple-attendance",
